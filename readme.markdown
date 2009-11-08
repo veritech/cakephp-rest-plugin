@@ -8,8 +8,6 @@ Based on:
 - [REST documentation][3]
 - [CakeDC article][4]
 
-[link text][1]
-
   [1]: http://www.cake-toppings.com/2009/07/15/cakefest-berlin/
   [2]: http://github.com/rodrigorm/rest
   [3]: http://book.cakephp.org/view/476/REST
