@@ -3,10 +3,17 @@ Not ready for production use!
 
 Based on:
 
-- [Priminister's API presentation during CakeFest #03, Berlin][http://www.cake-toppings.com/2009/07/15/cakefest-berlin/]
-- [Forked XML Serialization helper by rodrigorm][http://github.com/rodrigorm/rest]
-- [REST documentation][http://book.cakephp.org/view/476/REST]
-- [CakeDC article][http://cakedc.com/eng/developer/mark_story/2008/12/02/nate-abele-restful-cakephp]
+- [Priminister's API presentation during CakeFest #03, Berlin][1]
+- [Forked XML Serialization helper by rodrigorm][2]
+- [REST documentation][3]
+- [CakeDC article][4]
+
+[link text][1]
+
+  [1]: http://www.cake-toppings.com/2009/07/15/cakefest-berlin/
+  [2]: http://github.com/rodrigorm/rest
+  [3]: http://book.cakephp.org/view/476/REST
+  [4]: http://cakedc.com/eng/developer/mark_story/2008/12/02/nate-abele-restful-cakephp
 
 License: BSD-style
 
