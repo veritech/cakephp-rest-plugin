@@ -19,8 +19,6 @@ Class RestComponent extends Object {
     );
 
     public $Controller;
-    public $RestXml;
-    public $RestJson;
     public $postData;
 
     protected $_RestLog;
@@ -99,6 +97,12 @@ Class RestComponent extends Object {
 
         // Validate & Modify Post
         $this->postData = $this->_modelizePost($this->Controller->data);
+		
+		//Move parts from post requests in to the data array
+		foreach( $_POST as $k=>$v ){
+			$this->Controller->data[$k] =$v;
+		}
+		
         if ($this->postData === false) {
             return $this->abort('Invalid post data');
         }
@@ -112,12 +116,8 @@ Class RestComponent extends Object {
             $this->Controller->Security->requireSecure($this->_settings['auth']['requireSecure']);
         }
 
-        // Set content-headers
-        $this->headers();
-
         // Attach Rest Helper to controller
-        $this->Controller->helpers['Rest.' . $this->_activeHelper] =
-            $this->_settings;
+        $this->Controller->helpers['Rest.' . $this->_activeHelper] = $this->_settings;
     }
 
     /**
@@ -163,7 +163,16 @@ Class RestComponent extends Object {
             // the view inside this plugin
             $this->Controller->layout   = false;
             $this->Controller->plugin   = 'rest';
-            $this->Controller->viewPath = 'generic' . DS . $this->Controller->params['url']['ext'];
+
+			switch( $this->Controller->params['url']['ext'] ){
+				case 'json':
+					$this->Controller->view 	= 'Rest.json';
+					break;
+				case 'xml':
+					$this->Controller->view 	= 'Rest.xml';
+					break;
+			}
+            
         }
     }
 
@@ -177,6 +186,7 @@ Class RestComponent extends Object {
      */
     public function beforeRender (&$Controller) {
         if (!$this->isActive()) return;
+
 
         $data = $this->inject((array)@$this->_settings[$this->Controller->action]['extract'],
             $this->Controller->viewVars);
@@ -344,7 +354,7 @@ Class RestComponent extends Object {
         if ($set === false) {
             return $this->_credentials;
         }
-
+		
         // Set credentials
         if ($set === true) {
             if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
@@ -355,7 +365,7 @@ Class RestComponent extends Object {
                 }
                 $str = join(' ', $parts);
                 parse_str($str, $this->_credentials);
-
+				
                 $this->log(array(
                     'username' => $this->_credentials[$this->_settings['auth']['fields']['username']],
                     'apikey' => $this->_credentials[$this->_settings['auth']['fields']['apikey']],
@@ -442,46 +452,6 @@ Class RestComponent extends Object {
         return $restControllers;
     }
 
-    /**
-     * Set content-type headers based on extension
-     *
-     * @param <type> $ext
-     * 
-     * @return <type>
-     */
-    public function headers($ext = false) {
-        if (!$ext) {
-            $ext = $this->Controller->params['url']['ext'];
-        }
-
-        // Don't know why,  but RequestHandler isn't settings
-        // Content-Type right;  so using header() for now instead
-        switch($ext) {
-            case 'json':
-                // text/javascript
-                // application/json
-                if ($this->_settings['debug'] < 3) {
-                    header('Content-Type: text/javascript');
-                    $this->Controller->RequestHandler->setContent('json', 'text/javascript');
-                    $this->Controller->RequestHandler->respondAs('json');
-                }
-                $this->_activeHelper = 'RestJson';
-                break;
-            case 'xml':
-                if ($this->_settings['debug'] < 3) {
-                    header('Content-Type: text/xml');
-                    $this->Controller->RequestHandler->setContent('xml', 'text/xml');
-                    $this->Controller->RequestHandler->respondAs('xml');
-                }
-                $this->_activeHelper = 'RestXml';
-                break;
-            default:
-                return $this->abort(sprintf('Unsupported extension: "%s"',
-                        $this->Controller->params['url']['ext']), E_USER_ERROR);
-                break;
-        }
-    }
-
     public function isActive() {
         static $isActive;
         if (!isset($isActive)) {
@@ -489,21 +459,6 @@ Class RestComponent extends Object {
                 $this->_settings['extensions']);
         }
         return $isActive;
-    }
-
-    /**
-     * Access to the active XML/Json Helper
-     *
-     * @return <type>
-     */
-    public function helper() {
-        if (!is_object($this->{$this->_activeHelper})) {
-            App::import('Helper', 'Rest.'. $this->_activeHelper);
-            $className = $this->_activeHelper . 'Helper';
-            $this->{$this->_activeHelper} = new $className();
-        }
-    
-        return $this->{$this->_activeHelper};
     }
 
     public function error($format, $arg1 = null, $arg2 = null) {
@@ -664,17 +619,15 @@ Class RestComponent extends Object {
         }
         $this->Controller->header(sprintf('HTTP/1.1 %s %s', $code, $this->codes[$code]));
         
-        $this->headers();
-        $xml = $this->helper()->serialize($this->response($data));
-        
+		$response = $this->response($data);
         // Die.. ugly. but very safe. which is what we need
         // or all Auth & Acl work could be circumvented
         $this->log(array(
             'httpcode' => $code,
             'error' => $error,
         ));
-        $this->shutdown($this->Controller);
-        die($xml);
+        //$this->shutdown($this->Controller);
+        //die($response);
     }
 
 }
