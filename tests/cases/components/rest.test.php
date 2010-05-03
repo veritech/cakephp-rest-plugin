@@ -72,7 +72,7 @@ class RestComponentTestCase extends CakeTestCase {
     }
     
     public function testControllers() {
-        prd($this->Rest->controllers());
+        //prd($this->Rest->controllers());
     }
 
 	public function endTest() {
